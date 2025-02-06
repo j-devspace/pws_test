@@ -74,15 +74,8 @@
                     }).then(() => {
                         WriteLog('All service workers unregistered.');
 
-                        const projectPath = window.location.pathname.split('/')[1];
-                        const swPath = `/${projectPath}/service-worker.js`;
-                        
-                        // 개발 환경과 프로덕션 환경의 경로 차이를 고려
-                        const swScope = `/${projectPath}/`;
-
-
                         navigator.serviceWorker
-                            .register(swPath, {scope: swScope})
+                            .register('./service-worker.js', {scope: './'})
                             .then(function (registration) {
                                 WriteLog(`Service Worker가 scope에 등록되었습니다.: ${registration.scope}`);
                                 console.log(
