@@ -72,7 +72,7 @@
                     }).then(() => {
                         WriteLog('All service workers unregistered.');
 
-                        const swUrl = `${process.env.PUBLIC_URL}/pws_test/firebase-messaging-sw.js`;
+                        const swUrl = `/pws_test/firebase-messaging-sw.js`;
 
                         // navigator.serviceWorker
                         // .register(swUrl, {
@@ -83,7 +83,7 @@
 
 
                         navigator.serviceWorker
-                            .register(swUrl, { scope: process.env.PUBLIC_URL || '/'})
+                            .register(swUrl, { scope: '/'})
                             .then(function (registration) {
                                 WriteLog(`Service Worker가 scope에 등록되었습니다.: ${registration.scope}`);
                                 console.log(
