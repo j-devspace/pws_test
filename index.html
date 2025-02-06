@@ -53,17 +53,6 @@
 
         try {
 
-            fetch("https://public-s1.pearlcdn.com/pwa/index.html")
-                .then(response =>
-                    WriteLog(`Fetch 성공: ${JSON.stringify(response)}`)
-                )
-                .catch(error =>
-                    WriteLog(`Fetch 에러: ${JSON.stringify(error)}`)
-                );
-
-
-
-
             // 알람 허용 여부
             Notification.requestPermission().then((permission) => {
                 if (permission === "granted") {
