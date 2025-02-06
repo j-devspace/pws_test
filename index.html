@@ -70,8 +70,7 @@
                             registration.unregister();
                         }
                     }).then(() => {
-                        console.log('All service workers unregistered.');
-
+                        WriteLog('All service workers unregistered.');
 
                         navigator.serviceWorker
                             .register("/pws_test/firebase-messaging-sw.js")
