@@ -72,8 +72,18 @@
                     }).then(() => {
                         WriteLog('All service workers unregistered.');
 
+                        const swUrl = `${process.env.PUBLIC_URL}/pws_test/firebase-messaging-sw.js`;
+
+                        // navigator.serviceWorker
+                        // .register(swUrl, {
+                        //     scope: process.env.PUBLIC_URL || '/', // 현재 애플리케이션의 경로를 scope로 설정
+                        // })
+
+
+
+
                         navigator.serviceWorker
-                            .register("/pws_test/firebase-messaging-sw.js")
+                            .register(swUrl, { scope: process.env.PUBLIC_URL || '/'})
                             .then(function (registration) {
                                 WriteLog(`Service Worker가 scope에 등록되었습니다.: ${registration.scope}`);
                                 console.log(
