@@ -5,6 +5,7 @@
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#317EFB",
+    "scope": "/pws_test/",
     "icons": [
       {
         "src": "icons/icon-192x192.png",
