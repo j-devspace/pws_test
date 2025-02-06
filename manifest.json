@@ -1,11 +1,10 @@
 {
     "name": "My PWA",
     "short_name": "PWA",
-    "start_url": "/pws_test/index.html",
+    "start_url": "/pws_test",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#317EFB",
-    "scope": "/pws_test/",
     "icons": [
       {
         "src": "icons/icon-192x192.png",
