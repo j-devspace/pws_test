@@ -1,7 +1,9 @@
 {
+  
     "name": "My PWA",
     "short_name": "PWA",
-    "start_url": "/pws_test",
+    "start_url": "/pws_test/",
+    "scope": "/pws_test/",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#317EFB",
