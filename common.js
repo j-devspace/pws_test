@@ -25,7 +25,7 @@ const projectId = "565490563935";
 const vapId = "BA7k3cK4ONvLAMjsanhDsg6IWCL7y296bvYnmdFXzvPP3_1kLM7M-JcBeS2hXGB28Jd6NXeH8OMYoQKZlqRhldA";
 
 
-const serviceWorkerJs = "/service-worker.js";
+let serviceWorkerJs = "/service-worker.js";
 // TODO: github일때 추가
 serviceWorkerJs = "/pws_test/service-worker.js";
 
