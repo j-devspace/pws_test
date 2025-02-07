@@ -268,24 +268,24 @@ try {
     //     });
 
 
-    // 포그라운드에서 메시지 수신
-    onMessage(messaging, (payload) => {
-        WriteLog(`Message received. ${JSON.stringify(payload)}`);
-        WriteLog('Message received. ', payload);
+    // // 포그라운드에서 메시지 수신
+    // onMessage(messaging, (payload) => {
+    //     WriteLog(`Message received. ${JSON.stringify(payload)}`);
+    //     WriteLog('Message received. ', payload);
 
-        // 알림 표시
-        const notificationTitle = payload.notification.title;
-        const notificationOptions = {
-            body: payload.notification.body,
-            icon: '/firebase-logo.png' // 아이콘 경로를 적절히 변경하세요
-        };
+    //     // 알림 표시
+    //     const notificationTitle = payload.notification.title;
+    //     const notificationOptions = {
+    //         body: payload.notification.body,
+    //         icon: '/firebase-logo.png' // 아이콘 경로를 적절히 변경하세요
+    //     };
 
-        if (Notification.permission === 'granted') {
-            new Notification(notificationTitle, notificationOptions);
-        } else {
-            WriteLog('Notification permission not granted');
-        }
-    });
+    //     if (Notification.permission === 'granted') {
+    //         new Notification(notificationTitle, notificationOptions);
+    //     } else {
+    //         WriteLog('Notification permission not granted');
+    //     }
+    // });
 
     // // 이건뭐지
     // messaging.onBackgroundMessage((payload) => {

@@ -29,10 +29,6 @@ let serviceWorkerJs = "/service-worker.js";
 // TODO: github일때 추가
 serviceWorkerJs = "/pws_test/service-worker.js";
 
-let serviceWorkerCache = "/index.html";
-// TODO: github일때 추가
-serviceWorkerCache = "/pws_test/index.html";
-
 
 function WriteLog(message, obj) {
     const $divResult = document.querySelector('.divResult');
