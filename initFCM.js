@@ -201,7 +201,7 @@ function initServiceWorker() {
 
             // ServiceWorker 등록
             navigator.serviceWorker
-                .register('/service-worker.js', { scope: './' })
+                .register(serviceWorkerJs, { scope: './' })
                 .then(function (registration) {
                     WriteLog(`Service Worker가 scope에 등록되었습니다.`, registration.scope);
 
