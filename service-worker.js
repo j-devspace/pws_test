@@ -1,10 +1,13 @@
+
 // PWA관련 스크립트
 self.addEventListener('install', event => {
     console.log('[Service Worker] 설치됨');
     event.waitUntil(
         caches.open('pwa-cache-v1').then(cache => {
             return cache.addAll([
-                serviceWorkerCache
+                //"/index.html"
+                // TODO: github일때 추가
+                "/pws_test/index.html"
             ]);
         })
     );
