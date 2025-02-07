@@ -49,12 +49,15 @@ function init() {
 
     // Service Worker 등록
     window.addEventListener("load", function () {
-        initServiceWorker();
+        //initServiceWorker();
     });
 }
 
 function initServiceWorker() {
-    if ("serviceWorker" in navigator) {
+    WriteLog('Service Worker Start');
+    
+    if (!("serviceWorker" in navigator)) {
+        WriteLog('Service Worker is error');
         return;
     }
 

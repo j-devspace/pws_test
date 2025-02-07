@@ -5,55 +5,7 @@ import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/fireb
 // Firebase 초기화
 const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
-
-try {
-    WriteLog(`Messaging Init`, messaging);
-
-    getToken(messaging, { vapidKey: vapId })
-        .then((currentToken) => {
-            if (currentToken) {
-                window.userToken = currentToken;
-                WriteLog(`FCM Token`, currentToken);
-            } else {
-                WriteLog(`No registration token available. currentToken`, currentToken);
-            }
-        })
-        .catch((err) => {
-            WriteLog("An error occurred while retrieving token.", err);
-        });
-
-    // 포그라운드에서 메시지 수신
-    onMessage(messaging, (payload) => {
-        WriteLog(`Message received. ${JSON.stringify(payload)}`);
-        WriteLog('Message received. ', payload);
-
-        // 알림 표시
-        const notificationTitle = payload.notification.title;
-        const notificationOptions = {
-            body: payload.notification.body,
-            icon: '/firebase-logo.png' // 아이콘 경로를 적절히 변경하세요
-        };
-
-        if (Notification.permission === 'granted') {
-            new Notification(notificationTitle, notificationOptions);
-        } else {
-            WriteLog('Notification permission not granted');
-        }
-    });
-
-    // // 이건뭐지
-    // messaging.onBackgroundMessage((payload) => {
-    //     const notificationTitle = payload.title;
-    //     const notificationOptions = {
-    //         body: payload.body
-    //         // icon: payload.icon
-    //     };
-    //     self.registration.showNotification(notificationTitle, notificationOptions);
-    // });
-
-} catch (e) {
-    WriteLog(`initFCM Exception!`, err);
-}
+let accessToken = "";
 
 // get accessToken
 async function getAccessToken() {
@@ -180,8 +132,6 @@ async function getAccessToken2() {
 
 
 
-const accessToken = await getAccessToken2();
-
 
 // 클라이언트에서 푸시 알림 전송 함수
 async function sendPushNotification() {
@@ -225,3 +175,131 @@ async function sendPushNotification() {
 
 
 window.sendPushNotification = sendPushNotification;
+
+
+
+
+
+
+
+function initServiceWorker() {
+    WriteLog('Service Worker Start');
+
+    if (!("serviceWorker" in navigator)) {
+        WriteLog('Service Worker is error');
+        return;
+    }
+
+    try {
+        // 등록된 ServiceWorker 삭제 
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+            for (let registration of registrations) {
+                registration.unregister();
+            }
+            WriteLog('전체 Service Worker 삭제 성공');
+        }).then(() => {
+
+            // ServiceWorker 등록
+            navigator.serviceWorker
+                .register('/service-worker.js', { scope: './' })
+                .then(function (registration) {
+                    WriteLog(`Service Worker가 scope에 등록되었습니다.`, registration.scope);
+
+                    // Firebase가 기본으로 서비스워커를 /firebase-messaging-sw.js에서 자동으로 찾으려 한다.
+                    // serviceWorkerRegistration를 registration로 선언해주면 자동으로 찾지 않는다.
+                    return getToken(messaging, {
+                            vapidKey: vapId,
+                            serviceWorkerRegistration: registration
+                        })
+                        .then((currentToken) => {
+                            if (currentToken) {
+                                window.userToken = currentToken;
+
+                                accessToken = getAccessToken2();
+                                
+                                WriteLog(`FCM Token`, currentToken);
+                            } else {
+                                WriteLog(`No registration token available. currentToken`, currentToken);
+                            }
+                        })
+                        .catch((err) => {
+                            WriteLog("An error occurred while retrieving token.", err);
+                        });
+                })
+                .catch(function (err) {
+                    WriteLog(`Service Worker 등록 실패`, err);
+                });
+
+        }).catch(function (err) {
+            WriteLog(`Service Worker 삭제 실패`, err);
+        });
+
+    }
+    catch (err) {
+        WriteLog(`Service Worker 초기화 실패`, err);
+    }
+}
+
+initServiceWorker();
+
+
+
+
+
+
+
+
+
+
+try {
+    WriteLog(`Messaging Init`, messaging);
+
+    // getToken(messaging, { vapidKey: vapId })
+    //     .then((currentToken) => {
+    //         if (currentToken) {
+    //             window.userToken = currentToken;
+    //             WriteLog(`FCM Token`, currentToken);
+    //         } else {
+    //             WriteLog(`No registration token available. currentToken`, currentToken);
+    //         }
+    //     })
+    //     .catch((err) => {
+    //         WriteLog("An error occurred while retrieving token.", err);
+    //     });
+
+
+    // 포그라운드에서 메시지 수신
+    onMessage(messaging, (payload) => {
+        WriteLog(`Message received. ${JSON.stringify(payload)}`);
+        WriteLog('Message received. ', payload);
+
+        // 알림 표시
+        const notificationTitle = payload.notification.title;
+        const notificationOptions = {
+            body: payload.notification.body,
+            icon: '/firebase-logo.png' // 아이콘 경로를 적절히 변경하세요
+        };
+
+        if (Notification.permission === 'granted') {
+            new Notification(notificationTitle, notificationOptions);
+        } else {
+            WriteLog('Notification permission not granted');
+        }
+    });
+
+    // // 이건뭐지
+    // messaging.onBackgroundMessage((payload) => {
+    //     const notificationTitle = payload.title;
+    //     const notificationOptions = {
+    //         body: payload.body
+    //         // icon: payload.icon
+    //     };
+    //     self.registration.showNotification(notificationTitle, notificationOptions);
+    // });
+
+} catch (e) {
+    WriteLog(`initFCM Exception!`, err);
+}
+
+
+
