@@ -6,7 +6,7 @@ self.addEventListener('install', event => {
         caches.open('pwa-cache-v1').then(cache => {
             let serviceWorkerCache = "/index.html";
             // TODO: github일때 추가
-            serviceWorkerCache = "/pws_test/index.html";
+            serviceWorkerCache = "/pws_test";
             return cache.addAll([
                 serviceWorkerCache
             ]);
