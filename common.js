@@ -46,6 +46,8 @@ const firebaseConfig = {
 };
 
 
+const isGithubUrl = 0 <= location.origin.indexOf("github");
+
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
@@ -141,7 +143,12 @@ async function getJTW() {
 
 if ('serviceWorker' in navigator) {
 
-    navigator.serviceWorker.register('/firebase-messaging-sw.js')
+    let url = '/firebase-messaging-sw.js';
+    if (true == isGithubUrl) {
+        url = '/pws_test/firebase-messaging-sw.js'
+    }
+
+    navigator.serviceWorker.register(url)
         .then((registration) => {
             console.log("서비스 워커 등록 성공:", registration);
         })
