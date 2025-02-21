@@ -46,8 +46,19 @@ const firebaseConfig = {
     measurementId: "G-137ECMGPH2"
 };
 
+const vapId = "BA7k3cK4ONvLAMjsanhDsg6IWCL7y296bvYnmdFXzvPP3_1kLM7M-JcBeS2hXGB28Jd6NXeH8OMYoQKZlqRhldA";
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
+
+const isGithubUrl = 0 <= location.origin.indexOf("github");
+
+let serviceWorkerJs = "/test.js";
+
+if (true == isGithubUrl) {
+    serviceWorkerJs = "/pws_test/test.js";
+}
+
+
 
 // ✅ 2. 푸시 알림 권한 요청
 function requestPermission() {
@@ -63,7 +74,6 @@ function requestPermission() {
 
 // ✅ 3. FCM 토큰 가져오기
 function getFCMToken() {
-    const vapId = "BA7k3cK4ONvLAMjsanhDsg6IWCL7y296bvYnmdFXzvPP3_1kLM7M-JcBeS2hXGB28Jd6NXeH8OMYoQKZlqRhldA";
 
     messaging.getToken({ vapidKey: vapId })
         .then(token => {
@@ -224,3 +234,109 @@ messaging.onMessage((payload) => {
         icon: "/firebase-logo.png"
     });
 });
+
+
+function initServiceWorker() {
+    WriteLog('Service Worker Start');
+
+    if (!("serviceWorker" in navigator)) {
+        WriteLog('Service Worker is error');
+        return;
+    }
+
+    try {
+        // 등록된 ServiceWorker 삭제 
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+            for (let registration of registrations) {
+                registration.unregister();
+            }
+            WriteLog('전체 Service Worker 삭제 성공');
+        }).then(() => {
+            WriteLog('전체 Service Worker 등록 시작');
+
+            // ServiceWorker 등록
+            navigator.serviceWorker
+                .register(serviceWorkerJs, { scope: './' })
+                .then(function (registration) {
+                    WriteLog(`Service Worker가 scope에 등록되었습니다.`, registration.scope);
+
+                    WriteLog(`vapId`, vapId);
+                    // Firebase가 기본으로 서비스워커를 /firebase-messaging-sw.js에서 자동으로 찾으려 한다.
+                    // serviceWorkerRegistration를 registration로 선언해주면 자동으로 찾지 않는다.
+                    return getToken(messaging, {
+                            vapidKey: vapId,
+                            serviceWorkerRegistration: registration
+                        })
+                        .then((currentToken) => {
+                            if (currentToken) {
+                                window.userToken = currentToken;
+                            
+                                WriteLog(`FCM Token`, currentToken);
+                            } else {
+                                WriteLog(`No registration token available. currentToken`, currentToken);
+                            }
+                        })
+                        .catch((err) => {
+                            WriteLog("An error occurred while retrieving token.", err);
+                        });
+                })
+                .catch(function (err) {
+                    WriteLog(`Service Worker 등록 실패`, err);
+                });
+
+        }).catch(function (err) {
+            WriteLog(`Service Worker 삭제 실패`, err);
+        });
+
+    }
+    catch (err) {
+        WriteLog(`Service Worker 초기화 실패`, err);
+    }
+}
+
+//initServiceWorker();
+
+
+
+function initServiceWorker2() {
+    console.log('🚀 Service Worker 시작');
+
+    if (!("serviceWorker" in navigator)) {
+        console.error('❌ 브라우저가 Service Worker를 지원하지 않습니다.');
+        return;
+    }
+
+    // 기존 등록된 서비스 워커 삭제 후 새로 등록
+    navigator.serviceWorker.getRegistrations()
+        .then((registrations) => {
+            return Promise.all(registrations.map(registration => registration.unregister()));
+        })
+        .then(() => {
+            console.log('✅ 기존 Service Worker 삭제 완료');
+            console.log('🚀 새로운 Service Worker 등록 시작');
+
+            return navigator.serviceWorker.register(serviceWorkerJs, { scope: './' });
+        })
+        .then((registration) => {
+            console.log(`✅ Service Worker 등록 성공: ${registration.scope}`);
+
+            // Firebase FCM 토큰 가져오기
+            return messaging.getToken({
+                vapidKey: vapId,
+                serviceWorkerRegistration: registration
+            });
+        })
+        .then((currentToken) => {
+            if (currentToken) {
+                window.userToken = currentToken;
+                console.log(`✅ FCM Token 획득:`, currentToken);
+            } else {
+                console.warn(`⚠ FCM Token을 가져올 수 없습니다.`);
+            }
+        })
+        .catch((err) => {
+            console.error("❌ Service Worker 초기화 중 오류 발생:", err);
+        });
+}
+
+initServiceWorker2();
