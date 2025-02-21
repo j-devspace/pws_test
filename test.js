@@ -40,30 +40,30 @@ const isGithubUrl = 0 <= location.origin.indexOf("github");
 
 
 
-// // PWA관련 스크립트
-// self.addEventListener('install', event => {
-//     console.log('[Service Worker] 설치됨');
-//     event.waitUntil(
-//         caches.open('pwa-cache-v1').then(cache => {
-//             let serviceWorkerCache = "/index.html";
+// PWA관련 스크립트
+self.addEventListener('install', event => {
+    console.log('[Service Worker] 설치됨');
+    event.waitUntil(
+        caches.open('pwa-cache-v1').then(cache => {
+            let serviceWorkerCache = "/index.html";
 
-//             // TODO: github일때 추가
-//             if(true == isGithubUrl) {
-//                 serviceWorkerCache = "/pws_test";
-//             }
+            // TODO: github일때 추가
+            if(true == isGithubUrl) {
+                serviceWorkerCache = "/pws_test";
+            }
 
-//             return cache.addAll([
-//                 serviceWorkerCache
-//             ]);
-//         })
-//     );
-// });
+            return cache.addAll([
+                serviceWorkerCache
+            ]);
+        })
+    );
+});
 
 
-// self.addEventListener('fetch', event => {
-//     event.respondWith(
-//         caches.match(event.request).then(response => {
-//             return response || fetch(event.request);
-//         })
-//     );
-// });
+self.addEventListener('fetch', event => {
+    event.respondWith(
+        caches.match(event.request).then(response => {
+            return response || fetch(event.request);
+        })
+    );
+});
