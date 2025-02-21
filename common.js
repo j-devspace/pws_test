@@ -1,28 +1,7 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FCM 푸시 알림 테스트</title>
-</head>
-<body>
-    <h2>🔔 FCM 푸시 알림 테스트</h2>
-    <button onclick="requestPermission()">1️⃣ 알림 권한 요청</button>
-    <button onclick="getFCMToken()">2️⃣ FCM 토큰 가져오기</button>
-    <button onclick="sendPushNotification()">3️⃣ 푸시 알림 보내기</button>
-    
-    <p><strong>FCM 토큰:</strong> <span id="token"></span></p>
-    <p><strong>응답 로그:</strong></p>
-    <pre id="log"></pre>
+// ✅ 1. Firebase 설정
+const projectId = "565490563935";
 
-    <!-- Firebase SDK 추가 --><!-- Firebase SDK (compat 버전 사용) -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
-
-
-    <script>
-        // ✅ 1. Firebase 설정
-        const serviceAccount = {
+const serviceAccount = {
     "type": "service_account",
     "project_id": "je-test-e14c9",
     "private_key_id": "bb228d1a5ef6f686db67c50a109ac2fb3fb7a4f8",
@@ -34,7 +13,7 @@
     "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
     "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40je-test-e14c9.iam.gserviceaccount.com",
     "universe_domain": "googleapis.com",
-    
+
     "public_key": `-----BEGIN CERTIFICATE-----
 MIIC/DCCAeSgAwIBAgIIY+mdDQdvdQ8wDQYJKoZIhvcNAQEFBQAwIDEeMBwGA1UE
 AwwVMTA3NTg4NjUzNTA0Mjk3MDk2NzA1MCAXDTI1MDIyMDEyMDk1MVoYDzk5OTkx
@@ -54,7 +33,7 @@ QYp8eNlB12rXiX7YMT/PnAgeHRxRXLMjzrJZjWLtySVhLiS6Fcxr1ha9RITh1Fu6
 4a2HexMGgcH2QjFgxl9c7o4jSWCtEUTDQ6ioFfsH+KKTIvRm7ahMh0GLR/q0cRDl
 -----END CERTIFICATE-----
 `
-  };
+};
 
 const firebaseConfig = {
     apiKey: "AIzaSyBUTB7eB75zqP2ER1xG7WDRldh9cS-rGy8",
@@ -66,75 +45,107 @@ const firebaseConfig = {
     measurementId: "G-137ECMGPH2"
 };
 
-        firebase.initializeApp(firebaseConfig);
-        const messaging = firebase.messaging();
 
-        // ✅ 2. 푸시 알림 권한 요청
-        function requestPermission() {
-            Notification.requestPermission().then(permission => {
-                logMessage(`알림 권한 상태: ${permission}`);
-                if (permission === "granted") {
-                    logMessage("✅ 알림 권한이 허용되었습니다.");
-                } else {
-                    logMessage("❌ 알림 권한이 거부되었습니다.");
-                }
-            });
+firebase.initializeApp(firebaseConfig);
+const messaging = firebase.messaging();
+
+
+// ✅ 5. 로그 출력 함수
+function WriteLog(message, obj) {
+    document.getElementById("log").innerText += message + "\n";
+    console.log(message, obj || '');
+}
+function logMessage(message) {
+    document.getElementById("log").innerText += message + "\n";
+    console.log(message);
+}
+
+
+
+// base64Url 인코딩 함수
+function base64UrlEncode(str) {
+    return btoa(str)
+        .replace(/=/g, '')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_');
+}
+
+// JWT 서명 생성
+async function signJwt(unsignedToken, privateKey) {
+    const encoder = new TextEncoder();
+    const keyArrayBuffer = pemToArrayBuffer(privateKey);
+
+    const key = await crypto.subtle.importKey(
+        'pkcs8',
+        keyArrayBuffer,
+        { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+        false,
+        ['sign']
+    );
+
+    const signature = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, encoder.encode(unsignedToken));
+    return base64UrlEncode(String.fromCharCode.apply(null, new Uint8Array(signature)));
+}
+
+// PEM 키를 ArrayBuffer로 변환하는 함수
+function pemToArrayBuffer(pem) {
+    const b64Lines = pem.replace(/-----.*-----/g, '').replace(/\n/g, '');
+    const b64 = atob(b64Lines);
+    const buf = new ArrayBuffer(b64.length);
+    const view = new Uint8Array(buf);
+    for (let i = 0; i < b64.length; i++) {
+        view[i] = b64.charCodeAt(i);
+    }
+    return buf;
+}
+
+// ✅ 2. 푸시 알림 권한 요청
+function requestPermission() {
+    Notification.requestPermission().then(permission => {
+        logMessage(`알림 권한 상태: ${permission}`);
+        if (permission === "granted") {
+            logMessage("✅ 알림 권한이 허용되었습니다.");
+        } else {
+            logMessage("❌ 알림 권한이 거부되었습니다.");
         }
+    });
+}
 
-        // ✅ 3. FCM 토큰 가져오기
-        function getFCMToken() {
-            const vapId = "BA7k3cK4ONvLAMjsanhDsg6IWCL7y296bvYnmdFXzvPP3_1kLM7M-JcBeS2hXGB28Jd6NXeH8OMYoQKZlqRhldA";
 
-            messaging.getToken({ vapidKey: vapId })
-                .then(token => {
-                    if (token) {
-                        document.getElementById("token").innerText = token;
-                        logMessage("✅ FCM 토큰을 가져왔습니다.");
-                    } else {
-                        logMessage("❌ FCM 토큰이 없습니다.");
-                    }
-                })
-                .catch(error => {
-                    logMessage("❌ FCM 토큰 가져오기 실패: " + error);
-                });
-        }
 
-        // ✅ 4. FCM 서버로 푸시 알림 전송
-        function sendPushNotification() {
-            const token = document.getElementById("token").innerText;
-            if (!token) {
-                logMessage("⚠ 먼저 'FCM 토큰 가져오기'를 실행하세요!");
-                return;
-            }
 
-            const payload = {
-                message: {
-                    token: token,
-                    data: {
-                        title: "테스트 알림",
-                        body: "이것은 FCM 푸시 알림 테스트입니다!"
-                    }
-                }
-            };
 
-            fetch("https://fcm.googleapis.com/v1/projects/YOUR_PROJECT_ID/messages:send", {
-                method: "POST",
-                headers: {
-                    "Authorization": "Bearer YOUR_SERVER_KEY",
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(payload)
-            })
-            .then(response => response.json())
-            .then(data => logMessage("📩 푸시 발송 성공: " + JSON.stringify(data)))
-            .catch(error => logMessage("❌ 푸시 발송 실패: " + error));
-        }
 
-        // ✅ 5. 로그 출력 함수
-        function logMessage(message) {
-            document.getElementById("log").innerText += message + "\n";
-            console.log(message);
-        }
-    </script>
-</body>
-</html>
+
+
+async function getJTW() {
+    const now = Math.floor(Date.now() / 1000);
+    const header = {
+        alg: 'RS256',
+        typ: 'JWT',
+    };
+    const claimSet = {
+        iss: serviceAccount.client_email,
+        scope: 'https://www.googleapis.com/auth/firebase.messaging',
+        aud: 'https://oauth2.googleapis.com/token',
+        exp: now + 3600,  // 1시간 동안 유효
+        iat: now,         // 발급 시간
+    };
+
+    const unsignedToken = `${base64UrlEncode(JSON.stringify(header))}.${base64UrlEncode(JSON.stringify(claimSet))}`;
+
+    // 서명 생성
+    const signature = await signJwt(unsignedToken, serviceAccount.private_key);
+    return `${unsignedToken}.${signature}`;
+}
+
+if ('serviceWorker' in navigator) {
+
+    navigator.serviceWorker.register('/firebase-messaging-sw.js')
+        .then((registration) => {
+            console.log("서비스 워커 등록 성공:", registration);
+        })
+        .catch((error) => {
+            console.error("서비스 워커 등록 실패:", error);
+        });
+}

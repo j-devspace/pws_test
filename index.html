@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FCM 푸시 알림 테스트</title>
+</head>
+
+<body>
+    <h2>🔔 FCM 푸시 알림 테스트</h2>
+    <button onclick="requestPermission()">1️⃣ 알림 권한 요청</button>
+    <button onclick="getFCMToken()">2️⃣ FCM 토큰 가져오기</button>
+    <button onclick="sendPushNotification()">3️⃣ 푸시 알림 보내기</button>
+
+    <p><strong>FCM 토큰:</strong> <span id="token"></span></p>
+    <p><strong>응답 로그:</strong></p>
+    <pre id="log"></pre>
+
+    <!-- Firebase SDK 추가 --><!-- Firebase SDK (compat 버전 사용) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
+
+    <!-- 필수값 -->
+    <script src="./common.js?v=1"></script>
+    
+    <script src="./fcm.js?v=1"></script>
+
+    <script type="module" src="./fcm.js?v=1"></script>
+</body>
+
+</html>
