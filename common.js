@@ -1,3 +1,4 @@
+
 // ✅ 1. Firebase 설정
 const projectId = "565490563935";
 
@@ -31,8 +32,8 @@ SAcmWJIaxGNPA38rbXgkddUeTxiU8zIqbdw9IAdXMV1JjGb9Rk58Xpb5W4HwJYHj
 QYp8eNlB12rXiX7YMT/PnAgeHRxRXLMjzrJZjWLtySVhLiS6Fcxr1ha9RITh1Fu6
 /Zk86E1eFTDQv5VRD+kt81IaVBxV31c2T+sz4bNioRAiz+xPlN7eAgPEPodZE6bo
 4a2HexMGgcH2QjFgxl9c7o4jSWCtEUTDQ6ioFfsH+KKTIvRm7ahMh0GLR/q0cRDl
------END CERTIFICATE-----
-`
+-----END CERTIFICATE-----`
+
 };
 
 const firebaseConfig = {
@@ -45,12 +46,102 @@ const firebaseConfig = {
     measurementId: "G-137ECMGPH2"
 };
 
-
-const isGithubUrl = 0 <= location.origin.indexOf("github");
-
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
+// ✅ 2. 푸시 알림 권한 요청
+function requestPermission() {
+    Notification.requestPermission().then(permission => {
+        logMessage(`알림 권한 상태: ${permission}`);
+        if (permission === "granted") {
+            logMessage("✅ 알림 권한이 허용되었습니다.");
+        } else {
+            logMessage("❌ 알림 권한이 거부되었습니다.");
+        }
+    });
+}
+
+// ✅ 3. FCM 토큰 가져오기
+function getFCMToken() {
+    const vapId = "BA7k3cK4ONvLAMjsanhDsg6IWCL7y296bvYnmdFXzvPP3_1kLM7M-JcBeS2hXGB28Jd6NXeH8OMYoQKZlqRhldA";
+
+    messaging.getToken({ vapidKey: vapId })
+        .then(token => {
+            if (token) {
+                document.getElementById("token").innerText = token;
+                logMessage("✅ FCM 토큰을 가져왔습니다.");
+            } else {
+                logMessage("❌ FCM 토큰이 없습니다.");
+            }
+        })
+        .catch(error => {
+            logMessage("❌ FCM 토큰 가져오기 실패: " + error);
+        });
+}
+
+// ✅ 4. FCM 서버로 푸시 알림 전송
+// 액세스 토큰 요청 함수
+async function getAccessToken() {
+    // 서명 생성
+    const jwt = await getJTW();
+
+    // 액세스 토큰 요청
+    const response = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            'grant_type': 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+            'assertion': jwt,
+        }),
+    });
+
+    WriteLog('Get AccessToken jwt', jwt);
+
+    const data = await response.json();
+
+    if (data.access_token) {
+        WriteLog('Get AccessToken', data.access_token);
+        return data.access_token;
+    } else {
+        WriteLog('Get AccessToken Fail', data);
+    }
+}
+
+async function sendPushNotification() {
+    const accessToken = await getAccessToken();
+    const token = document.getElementById("token").innerText;
+    if (!token) {
+        logMessage("⚠ 먼저 'FCM 토큰 가져오기'를 실행하세요!");
+        return;
+    }
+
+    const payload = {
+        message: {
+            token: token,
+            notification: {
+                title: "테스트 알림",
+                body: "이것은 FCM 푸시 알림 테스트입니다!"
+            },
+            data: {
+                customKey: "customValue"
+            }
+        }
+    };
+
+    fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${accessToken}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    })
+        .then(response => response.json())
+        .then(data => logMessage("📩 푸시 발송 성공: " + JSON.stringify(data)))
+        .catch(error => logMessage("❌ 푸시 발송 실패: " + error));
+}
 
 // ✅ 5. 로그 출력 함수
 function WriteLog(message, obj) {
@@ -61,8 +152,6 @@ function logMessage(message) {
     document.getElementById("log").innerText += message + "\n";
     console.log(message);
 }
-
-
 
 // base64Url 인코딩 함수
 function base64UrlEncode(str) {
@@ -101,25 +190,6 @@ function pemToArrayBuffer(pem) {
     return buf;
 }
 
-// ✅ 2. 푸시 알림 권한 요청
-function requestPermission() {
-    Notification.requestPermission().then(permission => {
-        logMessage(`알림 권한 상태: ${permission}`);
-        if (permission === "granted") {
-            logMessage("✅ 알림 권한이 허용되었습니다.");
-        } else {
-            logMessage("❌ 알림 권한이 거부되었습니다.");
-        }
-    });
-}
-
-
-
-
-
-
-
-
 async function getJTW() {
     const now = Math.floor(Date.now() / 1000);
     const header = {
@@ -141,18 +211,16 @@ async function getJTW() {
     return `${unsignedToken}.${signature}`;
 }
 
-if ('serviceWorker' in navigator) {
+messaging.onMessage((payload) => {
+    console.log("✅ 포그라운드 메시지 수신:", payload);
 
-    let url = '/firebase-messaging-sw.js';
-    if (true == isGithubUrl) {
-        url = '/pws_test/firebase-messaging-sw.js'
+    if (!payload.notification) {
+        console.log("⚠ 알림 데이터가 없음, payload 내용:", payload);
+        return;
     }
 
-    navigator.serviceWorker.register(url)
-        .then((registration) => {
-            console.log("서비스 워커 등록 성공:", registration);
-        })
-        .catch((error) => {
-            console.error("서비스 워커 등록 실패:", error);
-        });
-}
+    new Notification(payload.notification.title, {
+        body: payload.notification.body,
+        icon: "/firebase-logo.png"
+    });
+});
