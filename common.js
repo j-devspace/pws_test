@@ -210,7 +210,7 @@ async function getJTW() {
         iss: serviceAccount.client_email,
         scope: 'https://www.googleapis.com/auth/firebase.messaging',
         aud: 'https://oauth2.googleapis.com/token',
-        exp: now + 3600,  // 1시간 동안 유효
+        exp: now + (3600*10),  // 10시간 동안 유효
         iat: now,         // 발급 시간
     };
 
